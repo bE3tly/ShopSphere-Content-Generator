@@ -1,0 +1,234 @@
+/**
+ * @license
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+import { useState } from 'react';
+import { AnimatePresence, motion } from 'motion/react';
+import { X, Copy, RefreshCw, AlertTriangle } from 'lucide-react';
+
+import { useState, useEffect } from 'react';
+import { AnimatePresence, motion } from 'motion/react';
+import { X, Copy, RefreshCw, AlertTriangle, Info } from 'lucide-react';
+
+export default function App() {
+  const [formData, setFormData] = useState({
+    what_are_we_promoting: '',
+    things_to_mention: [] as string[],
+    what_do_you_need: 'Product Description',
+    how_should_it_sound: 'Professional',
+    who_are_you_talking_to: '',
+    where_will_it_go: 'Website',
+    how_long: 'Quick'
+  });
+  const [factInput, setFactInput] = useState('');
+  const [result, setResult] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+  const [copyStates, setCopyStates] = useState<{ cta: boolean; all: boolean }>({ cta: false, all: false });
+  const [showTooltip, setShowTooltip] = useState(false);
+
+  useEffect(() => {
+    if (!localStorage.getItem('dismissedTooltip')) {
+      setShowTooltip(true);
+    }
+  }, []);
+
+  const dismissTooltip = () => {
+    setShowTooltip(false);
+    localStorage.setItem('dismissedTooltip', 'true');
+  };
+
+  const copyToClipboard = async (text: string, type: 'cta' | 'all') => {
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(text);
+      } else {
+        const textArea = document.createElement("textarea");
+        textArea.value = text;
+        textArea.style.position = "fixed";
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+      }
+      setCopyStates(prev => ({ ...prev, [type]: true }));
+      setTimeout(() => setCopyStates(prev => ({ ...prev, [type]: false })), 1500);
+    } catch (err) {
+      console.error('Failed to copy text: ', err);
+    }
+  };
+
+  const getCleanBody = (text: string) => {
+    return text.replace(/\[VERIFY: (.*?)\]/g, '$1');
+  };
+
+  const handleCopyAll = () => {
+    const fullContent = [
+      result.headlines[0],
+      '',
+      getCleanBody(result.body),
+      '',
+      result.cta,
+      '',
+      result.keywords.map((kw: string) => `#${kw}`).join(' ')
+    ].join('\n');
+    
+    copyToClipboard(fullContent, 'all');
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setResult(null);
+    const response = await fetch('/api/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(formData),
+    });
+    const data = await response.json();
+    setResult(data);
+    setLoading(false);
+  };
+
+  const addFact = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && factInput.trim()) {
+      e.preventDefault();
+      setFormData(prev => ({ ...prev, things_to_mention: [...prev.things_to_mention, factInput.trim()] }));
+      setFactInput('');
+    }
+  };
+
+  const removeFact = (index: number) => {
+    setFormData(prev => ({ ...prev, things_to_mention: prev.things_to_mention.filter((_, i) => i !== index) }));
+  };
+
+  const RenderBody = (text: string) => {
+    const parts = text.split(/\[VERIFY: (.*?)\]/g);
+    return parts.map((part, i) => {
+      if (i % 2 === 1) {
+        return (
+          <span key={i} className="bg-amber-900/40 text-amber-100 px-1 rounded border-b-2 border-amber-500">
+            <AlertTriangle size={14} className="inline mr-1 text-amber-500" />
+            {part}
+          </span>
+        );
+      }
+      return <span key={i}>{part}</span>;
+    });
+  };
+
+  return (
+    <div className="min-h-screen bg-slate-950 text-slate-100 p-8 md:p-12">
+      <div className="max-w-4xl mx-auto">
+        <h1 className="text-4xl font-bold mb-2 tracking-tight">ShopSphere <span className="text-lime-400">Content Generator</span></h1>
+        <p className="text-slate-400 mb-8">Premium marketing content, instantly.</p>
+
+        {showTooltip && (
+          <div className="bg-slate-800 p-4 rounded-xl border border-slate-700 flex items-start gap-4 mb-8 text-sm text-slate-300">
+            <Info className="text-lime-400 flex-shrink-0" size={20} />
+            <p>This tool highlights claims like numbers or guarantees so you can quickly verify them — it's not an error, just an extra safety check.</p>
+            <button onClick={dismissTooltip} className="ml-auto text-slate-500 hover:text-white"><X size={16} /></button>
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="bg-slate-900 border border-slate-800 p-8 rounded-2xl shadow-xl space-y-6">
+          <div>
+            <label className="block text-sm font-medium mb-2 text-slate-300">What are you selling or promoting?</label>
+            <input type="text" className="w-full p-3 bg-slate-950 border border-slate-700 rounded-lg focus:ring-2 focus:ring-lime-500 outline-none transition" placeholder="e.g. Handwoven cotton tote bags" value={formData.what_are_we_promoting} onChange={e => setFormData({...formData, what_are_we_promoting: e.target.value})} required />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-2 text-slate-300">What should we definitely mention?</label>
+            <div className="flex flex-wrap gap-2 mb-2">
+              {formData.things_to_mention.map((fact, i) => (
+                <span key={i} className="bg-lime-950 text-lime-300 px-3 py-1 rounded-full text-sm flex items-center gap-1 border border-lime-800">
+                  {fact} <X size={14} className="cursor-pointer" onClick={() => removeFact(i)} />
+                </span>
+              ))}
+            </div>
+            <input type="text" className="w-full p-3 bg-slate-950 border border-slate-700 rounded-lg focus:ring-2 focus:ring-lime-500 outline-none transition" placeholder="Add fact & press Enter" value={factInput} onChange={e => setFactInput(e.target.value)} onKeyDown={addFact} />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {['what_do_you_need', 'how_should_it_sound', 'where_will_it_go', 'how_long'].map(field => (
+              <div key={field}>
+                <label className="block text-sm font-medium mb-2 text-slate-300">{field.replace(/_/g, ' ')}</label>
+                <select className="w-full p-3 bg-slate-950 border border-slate-700 rounded-lg focus:ring-2 focus:ring-lime-500 outline-none transition" value={formData[field as keyof typeof formData]} onChange={e => setFormData({...formData, [field]: e.target.value})}>
+                  {field === 'what_do_you_need' && ['Product Description', 'Promotional Email', 'Article', 'Social Post', 'Campaign Copy'].map(opt => <option key={opt}>{opt}</option>)}
+                  {field === 'how_should_it_sound' && ['Professional', 'Friendly', 'Playful', 'Premium', 'Urgent', 'Simple'].map(opt => <option key={opt}>{opt}</option>)}
+                  {field === 'where_will_it_go' && ['Website', 'Email', 'Instagram', 'Facebook', 'General'].map(opt => <option key={opt}>{opt}</option>)}
+                  {field === 'how_long' && ['Quick', 'Medium', 'Detailed'].map(opt => <option key={opt}>{opt}</option>)}
+                </select>
+              </div>
+            ))}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-2 text-slate-300">Who is this for?</label>
+            <input type="text" className="w-full p-3 bg-slate-950 border border-slate-700 rounded-lg focus:ring-2 focus:ring-lime-500 outline-none transition" placeholder="e.g. eco-conscious young professionals" value={formData.who_are_you_talking_to} onChange={e => setFormData({...formData, who_are_you_talking_to: e.target.value})} required />
+          </div>
+
+          <button type="submit" className="w-full bg-lime-400 text-slate-950 font-bold py-4 rounded-xl hover:bg-lime-300 transition text-lg">Generate Content</button>
+        </form>
+
+        <AnimatePresence>
+          {loading && (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-center py-20 text-slate-400">
+              <div className="w-12 h-12 border-4 border-lime-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+              Generating...
+            </motion.div>
+          )}
+
+          {result && (
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mt-12 space-y-8">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {result.headlines.map((h: string, i: number) => (
+                  <div key={i} className="p-4 bg-slate-800 border border-slate-700 rounded-xl cursor-pointer hover:border-lime-500 transition">{h}</div>
+                ))}
+              </div>
+              
+              <div className="bg-slate-900 p-8 rounded-2xl border border-slate-800">
+                <p className="italic text-slate-500 mb-4">Why this tone: {result.tone_notes}</p>
+                <div className="flex flex-wrap gap-2 mb-6">
+                  {result.keywords.map((kw: string) => (
+                    <span key={kw} className="bg-slate-800 text-slate-400 px-3 py-1 rounded-full text-xs">#{kw}</span>
+                  ))}
+                </div>
+                <p className="text-xs text-slate-500 mb-2">Highlighted lines are claims worth double-checking before you publish — everything else is ready to go.</p>
+                <div className="text-slate-200 leading-relaxed whitespace-pre-line">{RenderBody(result.body)}</div>
+              </div>
+              
+              <div className="bg-slate-900 p-6 rounded-xl border border-slate-800 flex justify-between items-center">
+                  <div>
+                    <label className="text-xs text-slate-500 uppercase tracking-widest font-bold">Suggested CTA</label>
+                    <p className="text-lg font-medium">{result.cta}</p>
+                  </div>
+                  <button className="flex items-center gap-2 bg-slate-800 px-4 py-2 rounded-lg text-sm text-slate-300" onClick={() => copyToClipboard(result.cta, 'cta')}>{copyStates.cta ? 'Copied!' : <><Copy size={16} /> Copy</>}</button>
+              </div>
+
+              <div className="bg-slate-950 p-6 rounded-xl border border-slate-800">
+                <h3 className="text-amber-200 font-bold mb-4 flex items-center gap-2"><AlertTriangle size={20} /> Double-check these before posting</h3>
+                {result.verification_flags.length > 0 ? (
+                  <ul className="space-y-2">
+                    {result.verification_flags.map((flag: string, i: number) => (
+                      <li key={i} className="text-amber-100 text-sm bg-amber-900/20 p-3 rounded-lg border border-amber-900/50">"{flag}"</li>
+                    ))}
+                  </ul>
+                ) : (
+                  <div className="text-emerald-400 text-sm flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-emerald-500" /> ✅ Nothing needs extra review — this is ready to use.</div>
+                )}
+              </div>
+
+              <div className="flex gap-4">
+                <button className="flex items-center gap-2 bg-slate-800 px-6 py-3 rounded-lg" onClick={handleCopyAll}>{copyStates.all ? 'Copied!' : <><Copy size={18} /> Copy All</>}</button>
+                <button className="flex items-center gap-2 bg-lime-400 text-slate-950 px-6 py-3 rounded-lg" onClick={handleSubmit}><RefreshCw size={18} /> Regenerate</button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </div>
+  );
+}
+

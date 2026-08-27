@@ -1,0 +1,6 @@
+{
+  "name": "ShopSphere Content Generator",
+  "description": "An AI-powered content generator for ShopSphere Africa sellers to create marketing content.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
