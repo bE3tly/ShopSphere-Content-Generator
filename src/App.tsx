@@ -24,6 +24,7 @@ export default function App() {
   const [factInput, setFactInput] = useState('');
   const [result, setResult] = useState<any>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [copyStates, setCopyStates] = useState<{ cta: boolean; all: boolean }>({ cta: false, all: false });
   const [showTooltip, setShowTooltip] = useState(false);
 
@@ -81,14 +82,39 @@ export default function App() {
     e.preventDefault();
     setLoading(true);
     setResult(null);
-    const response = await fetch('/api/generate', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(formData),
-    });
-    const data = await response.json();
-    setResult(data);
-    setLoading(false);
+    setError(null);
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+    try {
+      const response = await fetch('/api/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+        signal: controller.signal
+      });
+
+      clearTimeout(timeoutId);
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || `Request failed with status ${response.status}`);
+      }
+
+      setResult(data);
+    } catch (err: any) {
+      clearTimeout(timeoutId);
+      if (err.name === 'AbortError') {
+        setError("Request timed out — check your connection or try again");
+      } else {
+        setError(err.message || "An unexpected error occurred");
+      }
+      console.error("Generation error:", err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const addFact = (e: React.KeyboardEvent) => {
@@ -171,6 +197,12 @@ export default function App() {
 
           <button type="submit" className="w-full bg-lime-400 text-slate-950 font-bold py-4 rounded-xl hover:bg-lime-300 transition text-lg">Generate Content</button>
         </form>
+
+        {error && (
+          <div className="mt-8 p-4 bg-red-950/50 border border-red-900 text-red-200 rounded-xl">
+            {error}
+          </div>
+        )}
 
         <AnimatePresence>
           {loading && (

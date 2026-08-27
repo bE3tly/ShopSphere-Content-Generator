@@ -10,7 +10,13 @@ async function startServer() {
   app.use(express.json());
 
   app.post("/api/generate", async (req, res) => {
+    console.log("Generation request started");
     const { what_are_we_promoting, things_to_mention, what_do_you_need, how_should_it_sound, who_are_you_talking_to, where_will_it_go, how_long } = req.body;
+
+    if (!process.env.GROQ_API_KEY) {
+      console.error("Missing GROQ_API_KEY");
+      return res.status(500).json({ error: "Missing API key configuration" });
+    }
 
     const systemPrompt = `You are an AI content generator for ShopSphere Africa, a marketplace platform helping small business sellers create marketing content. Your users are busy sellers with no professional writing experience, so you write on their behalf using only what they tell you.
 
@@ -44,6 +50,7 @@ No markdown fences, no preamble, no text outside the JSON object.`;
     Things to mention: ${JSON.stringify(things_to_mention)}`;
 
     try {
+        console.log("Calling Groq API...");
         const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
           method: "POST",
           headers: {
@@ -59,13 +66,23 @@ No markdown fences, no preamble, no text outside the JSON object.`;
           }),
         });
 
+        if (!response.ok) {
+          const errorData = await response.text();
+          console.error("Groq API error:", response.status, errorData);
+          return res.status(response.status).json({ error: `Groq API error: ${response.statusText}` });
+        }
+
         const data = await response.json();
-        console.log("Raw API Response:", data);
+        console.log("Groq API responded");
+        
         const content = data.choices[0].message.content.replace(/```json\n?|\n?```/g, '');
-        res.json(JSON.parse(content));
+        const parsedContent = JSON.parse(content);
+        
+        console.log("Generation successful, returning response");
+        res.json(parsedContent);
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: "Failed to generate content" });
+        console.error("Generation failed:", error);
+        res.status(500).json({ error: error instanceof Error ? error.message : "Failed to generate content" });
     }
   });
 
