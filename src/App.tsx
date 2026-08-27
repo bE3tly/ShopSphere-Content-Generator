@@ -84,11 +84,14 @@ export default function App() {
     setResult(null);
     setError(null);
 
+    const url = '/api/generate';
+    console.log(`Fetching from: ${window.location.origin}${url}`);
+
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 10000);
 
     try {
-      const response = await fetch('/api/generate', {
+      const response = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
