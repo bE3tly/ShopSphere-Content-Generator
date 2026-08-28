@@ -23,6 +23,7 @@ export default function App() {
   });
   const [factInput, setFactInput] = useState('');
   const [result, setResult] = useState<any>(null);
+  const [editableBody, setEditableBody] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copyStates, setCopyStates] = useState<{ cta: boolean; all: boolean }>({ cta: false, all: false });
@@ -75,7 +76,7 @@ export default function App() {
     const fullContent = [
       result.headlines[0],
       '',
-      getCleanBody(result.body),
+      getCleanBody(editableBody),
       '',
       result.cta,
       '',
@@ -114,6 +115,7 @@ export default function App() {
       }
 
       setResult(data);
+      setEditableBody(data.body);
     } catch (err: any) {
       clearTimeout(timeoutId);
       if (err.name === 'AbortError') {
@@ -255,8 +257,7 @@ export default function App() {
                     <span key={kw} className="bg-slate-800 text-slate-400 px-3 py-1 rounded-full text-xs">#{kw}</span>
                   ))}
                 </div>
-                <p className="text-xs text-slate-500 mb-2">Highlighted lines are claims worth double-checking before you publish — everything else is ready to go.</p>
-                <div className="text-slate-200 leading-relaxed whitespace-pre-line">{RenderBody(result.body)}</div>
+                <div className="text-slate-200 leading-relaxed whitespace-pre-line" contentEditable onInput={(e) => setEditableBody(e.currentTarget.innerText)}>{RenderBody(editableBody)}</div>
               </div>
               
               <div className="bg-slate-900 p-6 rounded-xl border border-slate-800 flex justify-between items-center">
