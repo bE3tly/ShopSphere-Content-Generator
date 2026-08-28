@@ -3,10 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState } from 'react';
-import { AnimatePresence, motion } from 'motion/react';
-import { X, Copy, RefreshCw, AlertTriangle } from 'lucide-react';
-
 import React, { useState, useEffect, useRef } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { X, Copy, RefreshCw, AlertTriangle, Info, ArrowUp } from 'lucide-react';
@@ -243,26 +239,21 @@ export default function App() {
 
     return (
       <div className="flex flex-col gap-4">
-        <div className="flex justify-between items-center">
-          <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider">Content Body</h3>
-          <button 
-            onClick={toggleEdit}
-            className="text-xs bg-slate-800 text-slate-300 px-3 py-1 rounded hover:bg-slate-700 transition"
-          >
-            {isEditing ? 'Save Changes' : 'Edit Text'}
-          </button>
-        </div>
+        <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider">Content Body</h3>
         
         {isEditing ? (
           <textarea 
             ref={textareaRef}
             defaultValue={body}
             className="w-full p-4 bg-slate-950 border border-slate-700 rounded-lg focus:ring-2 focus:ring-lime-500 outline-none transition h-64 text-slate-200 leading-relaxed"
+            onBlur={toggleEdit}
+            autoFocus
           />
         ) : (
           <div 
-            className="text-slate-200 leading-relaxed whitespace-pre-line p-4 bg-slate-800 rounded-lg border border-slate-700" 
+            className="text-slate-200 leading-relaxed whitespace-pre-line p-4 bg-slate-800 rounded-lg border border-slate-700 cursor-pointer hover:border-lime-500 transition" 
             dangerouslySetInnerHTML={{ __html: RenderBody(body) }}
+            onClick={toggleEdit}
           />
         )}
       </div>
