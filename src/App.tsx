@@ -7,7 +7,7 @@ import { useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { X, Copy, RefreshCw, AlertTriangle } from 'lucide-react';
 
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { X, Copy, RefreshCw, AlertTriangle, Info, ArrowUp } from 'lucide-react';
 
@@ -149,16 +149,24 @@ export default function App() {
     const parts = text.split(/\[VERIFY: (.*?)\]/g);
     return parts.map((part, i) => {
       if (i % 2 === 1) {
-        return (
-          <span key={i} className="bg-amber-200/50 text-amber-950 px-1 rounded border-b-2 border-amber-400">
-            <AlertTriangle size={14} className="inline mr-1 text-amber-600" />
-            {part}
-          </span>
-        );
+        return `<span class="bg-amber-200/50 text-amber-950 px-1 rounded border-b-2 border-amber-400"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="inline mr-1 text-amber-600"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>${part}</span>`;
       }
-      return <span key={i}>{part}</span>;
-    });
+      return part;
+    }).join('');
   };
+
+  const EditableBody = React.memo(({ body, setBody }: { body: string, setBody: (val: string) => void }) => {
+    return (
+      <div 
+        className="text-slate-200 leading-relaxed whitespace-pre-line" 
+        contentEditable 
+        onInput={(e) => setBody(e.currentTarget.innerText)}
+        dangerouslySetInnerHTML={{ __html: RenderBody(body) }}
+      />
+    );
+  }, (prevProps, nextProps) => {
+    return true; 
+  });
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 p-8 md:p-12">
@@ -261,7 +269,7 @@ export default function App() {
                     <span key={kw} className="bg-slate-800 text-slate-400 px-3 py-1 rounded-full text-xs">#{kw}</span>
                   ))}
                 </div>
-                <div className="text-slate-200 leading-relaxed whitespace-pre-line" contentEditable onInput={(e) => setEditableBody(e.currentTarget.innerText)}>{RenderBody(editableBody)}</div>
+                <EditableBody body={editableBody} setBody={setEditableBody} />
               </div>
               
               <div className="bg-slate-900 p-6 rounded-xl border border-slate-800 flex justify-between items-center">
