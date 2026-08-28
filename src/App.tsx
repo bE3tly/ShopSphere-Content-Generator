@@ -164,7 +164,7 @@ export default function App() {
         <form onSubmit={handleSubmit} className="bg-slate-900 border border-slate-800 p-8 rounded-2xl shadow-xl space-y-6">
           <div>
             <label className="block text-sm font-medium mb-2 text-slate-300">What are you selling or promoting?</label>
-            <input type="text" className="w-full p-3 bg-slate-950 border border-slate-700 rounded-lg focus:ring-2 focus:ring-lime-500 outline-none transition" placeholder="e.g. Handwoven cotton tote bags" value={formData.what_are_we_promoting} onChange={e => setFormData({...formData, what_are_we_promoting: e.target.value})} required />
+            <input type="text" className="w-full p-3 bg-slate-950 border border-slate-700 rounded-lg focus:ring-2 focus:ring-lime-500 outline-none transition" placeholder="e.g. Homemade shea butter" value={formData.what_are_we_promoting} onChange={e => setFormData({...formData, what_are_we_promoting: e.target.value})} required />
           </div>
 
           <div>
@@ -215,7 +215,25 @@ export default function App() {
             </motion.div>
           )}
 
-          {result && (
+          {result && (() => {
+            const extractFlags = (text: string): string[] => {
+                const regex = /\[VERIFY: (.*?)\]/g;
+                const flags = [];
+                let match;
+                while ((match = regex.exec(text)) !== null) {
+                    flags.push(match[1]);
+                }
+                return flags;
+            };
+
+            const allFlags = Array.from(new Set([
+                ...result.verification_flags,
+                ...extractFlags(result.body),
+                ...extractFlags(result.cta),
+                ...result.headlines.flatMap(extractFlags)
+            ]));
+
+            return (
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mt-12 space-y-8">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {result.headlines.map((h: string, i: number) => (
@@ -244,9 +262,9 @@ export default function App() {
 
               <div className="bg-amber-500/5 p-6 rounded-xl border border-amber-500/20">
                 <h3 className="text-amber-300 font-bold mb-4 flex items-center gap-2"><AlertTriangle size={20} className="text-amber-400" /> Double-check these before posting</h3>
-                {result.verification_flags.length > 0 ? (
+                {allFlags.length > 0 ? (
                   <ul className="space-y-2">
-                    {result.verification_flags.map((flag: string, i: number) => (
+                    {allFlags.map((flag: string, i: number) => (
                       <li key={i} className="text-amber-950 text-sm bg-amber-200/50 p-3 rounded-lg border border-amber-400/50">"{flag}"</li>
                     ))}
                   </ul>
@@ -260,7 +278,8 @@ export default function App() {
                 <button className="flex items-center gap-2 bg-lime-400 text-slate-950 px-6 py-3 rounded-lg" onClick={handleSubmit}><RefreshCw size={18} /> Regenerate</button>
               </div>
             </motion.div>
-          )}
+            );
+          })()}
         </AnimatePresence>
       </div>
     </div>
