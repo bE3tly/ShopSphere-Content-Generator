@@ -38,7 +38,9 @@ export default function App() {
 
   useEffect(() => {
     if (result && resultsRef.current) {
-      resultsRef.current.scrollIntoView({ behavior: 'smooth' });
+      setTimeout(() => {
+        resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 200);
     }
   }, [result]);
 
