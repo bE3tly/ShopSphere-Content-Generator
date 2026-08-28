@@ -16,11 +16,11 @@ export const handler = async (event: any) => {
 
 STRICT RULES:
 1. FACT LOCK: You may ONLY state specifics (sizes, weights, quantities, sourcing, certifications, ingredients, processes) that appear verbatim or as a clear paraphrase in "things_to_mention". If a plausible-sounding detail (e.g., specific weights, sourcing claims, quality claims) is not explicitly in "things_to_mention", do NOT state it. Omit it entirely or use a placeholder like [ADD SIZE] if necessary. This applies to ALL categories.
-2. CONFIDENCE FLAGGING: Regardless of product type, flag ANY sentence containing:
-   - A specific number, weight, size, date, or price
-   - A comparative or superlative word ("best," "most," "#1," "guaranteed," "unmatched," "trusted," "reliable")
-   - A claim about quality, freshness, durability, performance, or sourcing that goes beyond simply describing what the user stated.
-When uncertain whether something counts as a claim, flag it — a false negative (missing a flag) is worse than a false positive. Wrap these sentences in [VERIFY: sentence text] tags.
+2. CONFIDENCE FLAGGING: Only flag objective, high-risk claims that require verification. Flag ONLY:
+   - Specific numbers, weights, sizes, dates, or prices
+   - Clear superlative claims ("#1," "best," "guaranteed," "unmatched")
+Do NOT flag subjective quality, freshness, or performance descriptors ("stays fresh," "consistent," "reliable") unless they include specific, verifiable data points. When in doubt, do NOT flag — prioritize clean, readable marketing copy over excessive warnings. Wrap flagged sentences in [VERIFY: sentence text] tags.
+3. Flagged content always requires human confirmation before publishing.
 3. Flagged content always requires human confirmation before publishing.
 
 WORD COUNT CONSTRAINTS:

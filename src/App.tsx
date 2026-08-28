@@ -24,12 +24,12 @@ export default function App() {
   const [factInput, setFactInput] = useState('');
   const [result, setResult] = useState<any>(null);
   const [editableBody, setEditableBody] = useState('');
-  const [scrollTrigger, setScrollTrigger] = useState(0); // Distinct state for scrolling
+  const [generationId, setGenerationId] = useState(0); // Renamed from scrollTrigger
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copyStates, setCopyStates] = useState<{ cta: boolean; all: boolean }>({ cta: false, all: false });
   const [showTooltip, setShowTooltip] = useState(false);
-  const resultsRef = useRef<HTMLDivElement>(null);
+  const [showHighlights, setShowHighlights] = useState(false);
 
   useEffect(() => {
     if (!localStorage.getItem('dismissedTooltip')) {
@@ -37,13 +37,96 @@ export default function App() {
     }
   }, []);
 
-  useEffect(() => {
-    if (scrollTrigger > 0 && resultsRef.current) {
-      setTimeout(() => {
-        resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }, 200);
-    }
-  }, [scrollTrigger]);
+  const ResultsContainer = ({ result, editableBody, setEditableBody, generationId }: { result: any, editableBody: string, setEditableBody: (v: string) => void, generationId: number }) => {
+    const resultsRef = useRef<HTMLDivElement>(null);
+    
+    useEffect(() => {
+      if (generationId > 0 && resultsRef.current) {
+        setTimeout(() => {
+          resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 200);
+      }
+    }, [generationId]);
+    
+    const extractFlags = (text: string): string[] => {
+      const regex = /\[VERIFY: (.*?)\]/g;
+      const flags = [];
+      let match;
+      while ((match = regex.exec(text)) !== null) {
+          flags.push(match[1]);
+      }
+      return flags;
+    };
+
+    const allFlags = Array.from(new Set([
+        ...result.verification_flags,
+        ...extractFlags(result.body),
+        ...extractFlags(result.cta),
+        ...result.headlines.flatMap(extractFlags)
+    ]));
+
+    return (
+      <motion.div ref={resultsRef} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mt-12 space-y-8">
+        <div className="flex justify-end mb-4">
+          <button 
+            onClick={() => setShowHighlights(!showHighlights)}
+            className="text-sm bg-slate-800 text-slate-300 px-4 py-2 rounded-lg hover:bg-slate-700 transition"
+          >
+            {showHighlights ? 'Hide Verification Highlights' : 'Show Verification Highlights'}
+          </button>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {result.headlines.map((h: string, i: number) => (
+            <div key={i} className="p-4 bg-slate-800 border border-slate-700 rounded-xl cursor-pointer hover:border-lime-500 transition">{RenderBody(h)}</div>
+          ))}
+        </div>
+        
+        <div className="bg-slate-900 p-8 rounded-2xl border border-slate-800">
+          <p className="italic text-slate-500 mb-4">Why this tone: {result.tone_notes}</p>
+          <div className="flex flex-wrap gap-2 mb-6">
+            {result.keywords.map((kw: string) => (
+              <span key={kw} className="bg-slate-800 text-slate-400 px-3 py-1 rounded-full text-xs">#{kw}</span>
+            ))}
+          </div>
+          <EditableBody body={editableBody} setBody={setEditableBody} />
+        </div>
+        
+        <div className="bg-slate-900 p-6 rounded-xl border border-slate-800 flex justify-between items-center">
+            <div>
+              <label className="text-xs text-slate-500 uppercase tracking-widest font-bold">Suggested CTA</label>
+              <div className="text-lg font-medium">{RenderBody(result.cta)}</div>
+            </div>
+            <button className="flex items-center gap-2 bg-slate-800 px-4 py-2 rounded-lg text-sm text-slate-300" onClick={() => copyToClipboard(result.cta, 'cta')}>{copyStates.cta ? 'Copied!' : <><Copy size={16} /> Copy</>}</button>
+        </div>
+
+        <div className="bg-amber-500/5 p-6 rounded-xl border border-amber-500/20">
+          <h3 className="text-amber-300 font-bold mb-4 flex items-center gap-2"><AlertTriangle size={20} className="text-amber-400" /> Double-check these before posting</h3>
+          {allFlags.length > 0 ? (
+            <ul className="space-y-2">
+              {allFlags.map((flag: string, i: number) => (
+                <li key={i} className="text-amber-950 text-sm bg-amber-200/50 p-3 rounded-lg border border-amber-400/50">"{flag}"</li>
+              ))}
+            </ul>
+          ) : (
+            <div className="text-emerald-400 text-sm flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-emerald-500" /> ✅ Nothing needs extra review — this is ready to use.</div>
+          )}
+        </div>
+
+        <div className="flex gap-4">
+          <button className="flex items-center gap-2 bg-slate-800 px-6 py-3 rounded-lg" onClick={handleCopyAll}>{copyStates.all ? 'Copied!' : <><Copy size={18} /> Copy All</>}</button>
+          <button className="flex items-center gap-2 bg-lime-400 text-slate-950 px-6 py-3 rounded-lg" onClick={handleSubmit}><RefreshCw size={18} /> Regenerate</button>
+        </div>
+
+        <button
+          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          className="fixed bottom-6 right-6 p-4 bg-lime-400 text-slate-950 rounded-full shadow-lg hover:bg-lime-300 transition-all z-50"
+          aria-label="Back to top"
+        >
+          <ArrowUp size={24} />
+        </button>
+      </motion.div>
+    );
+  };
 
   const dismissTooltip = () => {
     setShowTooltip(false);
@@ -119,7 +202,7 @@ export default function App() {
 
       setResult(data);
       setEditableBody(data.body);
-      setScrollTrigger(prev => prev + 1); // Trigger scroll
+      setGenerationId(prev => prev + 1); // Trigger scroll
     } catch (err: any) {
       clearTimeout(timeoutId);
       if (err.name === 'AbortError') {
@@ -145,28 +228,56 @@ export default function App() {
     setFormData(prev => ({ ...prev, things_to_mention: prev.things_to_mention.filter((_, i) => i !== index) }));
   };
 
-  const RenderBody = (text: string) => {
-    const parts = text.split(/\[VERIFY: (.*?)\]/g);
-    return parts.map((part, i) => {
-      if (i % 2 === 1) {
-        return `<span class="bg-amber-200/50 text-amber-950 px-1 rounded border-b-2 border-amber-400"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="inline mr-1 text-amber-600"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>${part}</span>`;
-      }
-      return part;
-    }).join('');
-  };
+    const RenderBody = (text: string) => {
+      if (!showHighlights) return text.replace(/\[VERIFY: (.*?)\]/g, '$1');
+      const parts = text.split(/\[VERIFY: (.*?)\]/g);
+      return parts.map((part, i) => {
+        if (i % 2 === 1) {
+          return `<span class="bg-amber-200/50 text-amber-950 px-1 rounded border-b-2 border-amber-400"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="inline mr-1 text-amber-600"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>${part}</span>`;
+        }
+        return part;
+      }).join('');
+    };
 
-  const EditableBody = React.memo(({ body, setBody }: { body: string, setBody: (val: string) => void }) => {
+  const EditableBody = ({ body, setBody }: { body: string, setBody: (val: string) => void }) => {
+    const [isEditing, setIsEditing] = useState(false);
+    const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+    const toggleEdit = () => {
+      if (isEditing) {
+        // Switching to preview mode
+        setBody(textareaRef.current?.value || body);
+      }
+      setIsEditing(!isEditing);
+    };
+
     return (
-      <div 
-        className="text-slate-200 leading-relaxed whitespace-pre-line" 
-        contentEditable 
-        onInput={(e) => setBody(e.currentTarget.innerText)}
-        dangerouslySetInnerHTML={{ __html: RenderBody(body) }}
-      />
+      <div className="flex flex-col gap-4">
+        <div className="flex justify-between items-center">
+          <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider">Content Body</h3>
+          <button 
+            onClick={toggleEdit}
+            className="text-xs bg-slate-800 text-slate-300 px-3 py-1 rounded hover:bg-slate-700 transition"
+          >
+            {isEditing ? 'Save Changes' : 'Edit Text'}
+          </button>
+        </div>
+        
+        {isEditing ? (
+          <textarea 
+            ref={textareaRef}
+            defaultValue={body}
+            className="w-full p-4 bg-slate-950 border border-slate-700 rounded-lg focus:ring-2 focus:ring-lime-500 outline-none transition h-64 text-slate-200 leading-relaxed"
+          />
+        ) : (
+          <div 
+            className="text-slate-200 leading-relaxed whitespace-pre-line p-4 bg-slate-800 rounded-lg border border-slate-700" 
+            dangerouslySetInnerHTML={{ __html: RenderBody(body) }}
+          />
+        )}
+      </div>
     );
-  }, (prevProps, nextProps) => {
-    return true; 
-  });
+  };
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 p-8 md:p-12">
@@ -236,78 +347,14 @@ export default function App() {
             </motion.div>
           )}
 
-          {result && (() => {
-            const extractFlags = (text: string): string[] => {
-                const regex = /\[VERIFY: (.*?)\]/g;
-                const flags = [];
-                let match;
-                while ((match = regex.exec(text)) !== null) {
-                    flags.push(match[1]);
-                }
-                return flags;
-            };
-
-            const allFlags = Array.from(new Set([
-                ...result.verification_flags,
-                ...extractFlags(result.body),
-                ...extractFlags(result.cta),
-                ...result.headlines.flatMap(extractFlags)
-            ]));
-
-            return (
-            <motion.div ref={resultsRef} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mt-12 space-y-8">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {result.headlines.map((h: string, i: number) => (
-                  <div key={i} className="p-4 bg-slate-800 border border-slate-700 rounded-xl cursor-pointer hover:border-lime-500 transition">{RenderBody(h)}</div>
-                ))}
-              </div>
-              
-              <div className="bg-slate-900 p-8 rounded-2xl border border-slate-800">
-                <p className="italic text-slate-500 mb-4">Why this tone: {result.tone_notes}</p>
-                <div className="flex flex-wrap gap-2 mb-6">
-                  {result.keywords.map((kw: string) => (
-                    <span key={kw} className="bg-slate-800 text-slate-400 px-3 py-1 rounded-full text-xs">#{kw}</span>
-                  ))}
-                </div>
-                <EditableBody body={editableBody} setBody={setEditableBody} />
-              </div>
-              
-              <div className="bg-slate-900 p-6 rounded-xl border border-slate-800 flex justify-between items-center">
-                  <div>
-                    <label className="text-xs text-slate-500 uppercase tracking-widest font-bold">Suggested CTA</label>
-                    <div className="text-lg font-medium">{RenderBody(result.cta)}</div>
-                  </div>
-                  <button className="flex items-center gap-2 bg-slate-800 px-4 py-2 rounded-lg text-sm text-slate-300" onClick={() => copyToClipboard(result.cta, 'cta')}>{copyStates.cta ? 'Copied!' : <><Copy size={16} /> Copy</>}</button>
-              </div>
-
-              <div className="bg-amber-500/5 p-6 rounded-xl border border-amber-500/20">
-                <h3 className="text-amber-300 font-bold mb-4 flex items-center gap-2"><AlertTriangle size={20} className="text-amber-400" /> Double-check these before posting</h3>
-                {allFlags.length > 0 ? (
-                  <ul className="space-y-2">
-                    {allFlags.map((flag: string, i: number) => (
-                      <li key={i} className="text-amber-950 text-sm bg-amber-200/50 p-3 rounded-lg border border-amber-400/50">"{flag}"</li>
-                    ))}
-                  </ul>
-                ) : (
-                  <div className="text-emerald-400 text-sm flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-emerald-500" /> ✅ Nothing needs extra review — this is ready to use.</div>
-                )}
-              </div>
-
-              <div className="flex gap-4">
-                <button className="flex items-center gap-2 bg-slate-800 px-6 py-3 rounded-lg" onClick={handleCopyAll}>{copyStates.all ? 'Copied!' : <><Copy size={18} /> Copy All</>}</button>
-                <button className="flex items-center gap-2 bg-lime-400 text-slate-950 px-6 py-3 rounded-lg" onClick={handleSubmit}><RefreshCw size={18} /> Regenerate</button>
-              </div>
-
-              <button
-                onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-                className="fixed bottom-6 right-6 p-4 bg-lime-400 text-slate-950 rounded-full shadow-lg hover:bg-lime-300 transition-all z-50"
-                aria-label="Back to top"
-              >
-                <ArrowUp size={24} />
-              </button>
-            </motion.div>
-            );
-          })()}
+          {result && (
+            <ResultsContainer 
+              result={result} 
+              editableBody={editableBody} 
+              setEditableBody={setEditableBody} 
+              generationId={generationId} 
+            />
+          )}
         </AnimatePresence>
       </div>
     </div>
