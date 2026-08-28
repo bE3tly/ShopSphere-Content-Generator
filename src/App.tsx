@@ -241,21 +241,20 @@ export default function App() {
       <div className="flex flex-col gap-4">
         <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider">Content Body</h3>
         
-        {isEditing ? (
+        <div className="relative">
           <textarea 
             ref={textareaRef}
             defaultValue={body}
-            className="w-full p-4 bg-slate-950 border border-slate-700 rounded-lg focus:ring-2 focus:ring-lime-500 outline-none transition h-64 text-slate-200 leading-relaxed"
+            className={`w-full p-4 bg-slate-950 border border-slate-700 rounded-lg focus:ring-2 focus:ring-lime-500 outline-none transition h-64 text-slate-200 leading-relaxed ${isEditing ? 'block' : 'hidden'}`}
             onBlur={toggleEdit}
             autoFocus
           />
-        ) : (
           <div 
-            className="text-slate-200 leading-relaxed whitespace-pre-line p-4 bg-slate-800 rounded-lg border border-slate-700 cursor-pointer hover:border-lime-500 transition" 
+            className={`text-slate-200 leading-relaxed whitespace-pre-line p-4 bg-slate-800 rounded-lg border border-slate-700 cursor-pointer hover:border-lime-500 transition ${isEditing ? 'hidden' : 'block'}`} 
             dangerouslySetInnerHTML={{ __html: RenderBody(body) }}
             onClick={toggleEdit}
           />
-        )}
+        </div>
       </div>
     );
   };
@@ -274,7 +273,7 @@ export default function App() {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="bg-slate-900 border border-slate-800 p-8 rounded-2xl shadow-xl space-y-6">
+        <div className="bg-slate-900 border border-slate-800 p-8 rounded-2xl shadow-xl space-y-6">
           <div>
             <label className="block text-sm font-medium mb-2 text-slate-300">What are you selling or promoting?</label>
             <input type="text" className="w-full p-3 bg-slate-950 border border-slate-700 rounded-lg focus:ring-2 focus:ring-lime-500 outline-none transition" placeholder="e.g. Homemade shea butter" value={formData.what_are_we_promoting} onChange={e => setFormData({...formData, what_are_we_promoting: e.target.value})} onKeyDown={e => { if (e.key === 'Enter') e.preventDefault(); }} required />
@@ -311,8 +310,8 @@ export default function App() {
             <input type="text" className="w-full p-3 bg-slate-950 border border-slate-700 rounded-lg focus:ring-2 focus:ring-lime-500 outline-none transition" placeholder="e.g. eco-conscious young professionals" value={formData.who_are_you_talking_to} onChange={e => setFormData({...formData, who_are_you_talking_to: e.target.value})} onKeyDown={e => { if (e.key === 'Enter') e.preventDefault(); }} required />
           </div>
 
-          <button type="submit" className="w-full bg-lime-400 text-slate-950 font-bold py-4 rounded-xl hover:bg-lime-300 transition text-lg">Generate Content</button>
-        </form>
+          <button type="button" onClick={handleSubmit} className="w-full bg-lime-400 text-slate-950 font-bold py-4 rounded-xl hover:bg-lime-300 transition text-lg">Generate Content</button>
+        </div>
 
         {error && (
           <div className="mt-8 p-4 bg-red-950/50 border border-red-900 text-red-200 rounded-xl">
