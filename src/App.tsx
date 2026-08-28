@@ -247,7 +247,7 @@ export default function App() {
                 {result.verification_flags.length > 0 ? (
                   <ul className="space-y-2">
                     {result.verification_flags.map((flag: string, i: number) => (
-                      <li key={i} className="text-amber-100 text-sm bg-amber-500/10 p-3 rounded-lg border border-amber-500/20">"{flag}"</li>
+                      <li key={i} className="text-amber-950 text-sm bg-amber-200/50 p-3 rounded-lg border border-amber-400/50">"{flag}"</li>
                     ))}
                   </ul>
                 ) : (
