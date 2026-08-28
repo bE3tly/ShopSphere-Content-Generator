@@ -7,9 +7,9 @@ import { useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { X, Copy, RefreshCw, AlertTriangle } from 'lucide-react';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
-import { X, Copy, RefreshCw, AlertTriangle, Info } from 'lucide-react';
+import { X, Copy, RefreshCw, AlertTriangle, Info, ArrowUp } from 'lucide-react';
 
 export default function App() {
   const [formData, setFormData] = useState({
@@ -27,12 +27,19 @@ export default function App() {
   const [error, setError] = useState<string | null>(null);
   const [copyStates, setCopyStates] = useState<{ cta: boolean; all: boolean }>({ cta: false, all: false });
   const [showTooltip, setShowTooltip] = useState(false);
+  const resultsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!localStorage.getItem('dismissedTooltip')) {
       setShowTooltip(true);
     }
   }, []);
+
+  useEffect(() => {
+    if (result && resultsRef.current) {
+      resultsRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [result]);
 
   const dismissTooltip = () => {
     setShowTooltip(false);
@@ -234,7 +241,7 @@ export default function App() {
             ]));
 
             return (
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mt-12 space-y-8">
+            <motion.div ref={resultsRef} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mt-12 space-y-8">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {result.headlines.map((h: string, i: number) => (
                   <div key={i} className="p-4 bg-slate-800 border border-slate-700 rounded-xl cursor-pointer hover:border-lime-500 transition">{RenderBody(h)}</div>
@@ -277,6 +284,14 @@ export default function App() {
                 <button className="flex items-center gap-2 bg-slate-800 px-6 py-3 rounded-lg" onClick={handleCopyAll}>{copyStates.all ? 'Copied!' : <><Copy size={18} /> Copy All</>}</button>
                 <button className="flex items-center gap-2 bg-lime-400 text-slate-950 px-6 py-3 rounded-lg" onClick={handleSubmit}><RefreshCw size={18} /> Regenerate</button>
               </div>
+
+              <button
+                onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                className="fixed bottom-6 right-6 p-4 bg-lime-400 text-slate-950 rounded-full shadow-lg hover:bg-lime-300 transition-all z-50"
+                aria-label="Back to top"
+              >
+                <ArrowUp size={24} />
+              </button>
             </motion.div>
             );
           })()}
