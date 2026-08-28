@@ -83,7 +83,7 @@ export default function App() {
               <label className="text-xs text-slate-500 uppercase tracking-widest font-bold">Suggested CTA</label>
               <div className="text-lg font-medium" dangerouslySetInnerHTML={{ __html: RenderBody(result.cta) }} />
             </div>
-            <button className="flex items-center gap-2 bg-slate-800 px-4 py-2 rounded-lg text-sm text-slate-300" onClick={() => copyToClipboard(result.cta, 'cta')}>{copyStates.cta ? 'Copied!' : <><Copy size={16} /> Copy</>}</button>
+            <button type="button" className="flex items-center gap-2 bg-slate-800 px-4 py-2 rounded-lg text-sm text-slate-300" onClick={() => copyToClipboard(result.cta, 'cta')}>{copyStates.cta ? 'Copied!' : <><Copy size={16} /> Copy</>}</button>
         </div>
 
         <div className="bg-amber-500/5 p-6 rounded-xl border border-amber-500/20">
@@ -100,7 +100,7 @@ export default function App() {
         </div>
 
         <div className="flex gap-4">
-          <button className="flex items-center gap-2 bg-slate-800 px-6 py-3 rounded-lg" onClick={handleCopyAll}>{copyStates.all ? 'Copied!' : <><Copy size={18} /> Copy All</>}</button>
+          <button type="button" className="flex items-center gap-2 bg-slate-800 px-6 py-3 rounded-lg" onClick={handleCopyAll}>{copyStates.all ? 'Copied!' : <><Copy size={18} /> Copy All</>}</button>
           <button className="flex items-center gap-2 bg-lime-400 text-slate-950 px-6 py-3 rounded-lg" onClick={handleSubmit}><RefreshCw size={18} /> Regenerate</button>
         </div>
 
@@ -277,7 +277,7 @@ export default function App() {
         <form onSubmit={handleSubmit} className="bg-slate-900 border border-slate-800 p-8 rounded-2xl shadow-xl space-y-6">
           <div>
             <label className="block text-sm font-medium mb-2 text-slate-300">What are you selling or promoting?</label>
-            <input type="text" className="w-full p-3 bg-slate-950 border border-slate-700 rounded-lg focus:ring-2 focus:ring-lime-500 outline-none transition" placeholder="e.g. Homemade shea butter" value={formData.what_are_we_promoting} onChange={e => setFormData({...formData, what_are_we_promoting: e.target.value})} required />
+            <input type="text" className="w-full p-3 bg-slate-950 border border-slate-700 rounded-lg focus:ring-2 focus:ring-lime-500 outline-none transition" placeholder="e.g. Homemade shea butter" value={formData.what_are_we_promoting} onChange={e => setFormData({...formData, what_are_we_promoting: e.target.value})} onKeyDown={e => { if (e.key === 'Enter') e.preventDefault(); }} required />
           </div>
 
           <div>
@@ -308,7 +308,7 @@ export default function App() {
 
           <div>
             <label className="block text-sm font-medium mb-2 text-slate-300">Who is this for?</label>
-            <input type="text" className="w-full p-3 bg-slate-950 border border-slate-700 rounded-lg focus:ring-2 focus:ring-lime-500 outline-none transition" placeholder="e.g. eco-conscious young professionals" value={formData.who_are_you_talking_to} onChange={e => setFormData({...formData, who_are_you_talking_to: e.target.value})} required />
+            <input type="text" className="w-full p-3 bg-slate-950 border border-slate-700 rounded-lg focus:ring-2 focus:ring-lime-500 outline-none transition" placeholder="e.g. eco-conscious young professionals" value={formData.who_are_you_talking_to} onChange={e => setFormData({...formData, who_are_you_talking_to: e.target.value})} onKeyDown={e => { if (e.key === 'Enter') e.preventDefault(); }} required />
           </div>
 
           <button type="submit" className="w-full bg-lime-400 text-slate-950 font-bold py-4 rounded-xl hover:bg-lime-300 transition text-lg">Generate Content</button>
