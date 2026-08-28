@@ -29,7 +29,6 @@ export default function App() {
   const [error, setError] = useState<string | null>(null);
   const [copyStates, setCopyStates] = useState<{ cta: boolean; all: boolean }>({ cta: false, all: false });
   const [showTooltip, setShowTooltip] = useState(false);
-  const [showHighlights, setShowHighlights] = useState(false);
 
   useEffect(() => {
     if (!localStorage.getItem('dismissedTooltip')) {
@@ -67,17 +66,9 @@ export default function App() {
 
     return (
       <motion.div ref={resultsRef} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mt-12 space-y-8">
-        <div className="flex justify-end mb-4">
-          <button 
-            onClick={() => setShowHighlights(!showHighlights)}
-            className="text-sm bg-slate-800 text-slate-300 px-4 py-2 rounded-lg hover:bg-slate-700 transition"
-          >
-            {showHighlights ? 'Hide Verification Highlights' : 'Show Verification Highlights'}
-          </button>
-        </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {result.headlines.map((h: string, i: number) => (
-            <div key={i} className="p-4 bg-slate-800 border border-slate-700 rounded-xl cursor-pointer hover:border-lime-500 transition">{RenderBody(h)}</div>
+            <div key={i} className="p-4 bg-slate-800 border border-slate-700 rounded-xl cursor-pointer hover:border-lime-500 transition">{RenderBody(h, false)}</div>
           ))}
         </div>
         
@@ -94,7 +85,7 @@ export default function App() {
         <div className="bg-slate-900 p-6 rounded-xl border border-slate-800 flex justify-between items-center">
             <div>
               <label className="text-xs text-slate-500 uppercase tracking-widest font-bold">Suggested CTA</label>
-              <div className="text-lg font-medium">{RenderBody(result.cta)}</div>
+              <div className="text-lg font-medium">{RenderBody(result.cta, false)}</div>
             </div>
             <button className="flex items-center gap-2 bg-slate-800 px-4 py-2 rounded-lg text-sm text-slate-300" onClick={() => copyToClipboard(result.cta, 'cta')}>{copyStates.cta ? 'Copied!' : <><Copy size={16} /> Copy</>}</button>
         </div>
@@ -228,8 +219,8 @@ export default function App() {
     setFormData(prev => ({ ...prev, things_to_mention: prev.things_to_mention.filter((_, i) => i !== index) }));
   };
 
-    const RenderBody = (text: string) => {
-      if (!showHighlights) return text.replace(/\[VERIFY: (.*?)\]/g, '$1');
+    const RenderBody = (text: string, show: boolean) => {
+      if (!show) return text.replace(/\[VERIFY: (.*?)\]/g, '$1');
       const parts = text.split(/\[VERIFY: (.*?)\]/g);
       return parts.map((part, i) => {
         if (i % 2 === 1) {
@@ -272,7 +263,7 @@ export default function App() {
         ) : (
           <div 
             className="text-slate-200 leading-relaxed whitespace-pre-line p-4 bg-slate-800 rounded-lg border border-slate-700" 
-            dangerouslySetInnerHTML={{ __html: RenderBody(body) }}
+            dangerouslySetInnerHTML={{ __html: RenderBody(body, true) }}
           />
         )}
       </div>
