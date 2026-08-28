@@ -83,7 +83,7 @@ export default function App() {
               <label className="text-xs text-slate-500 uppercase tracking-widest font-bold">Suggested CTA</label>
               <div className="text-lg font-medium" dangerouslySetInnerHTML={{ __html: RenderBody(result.cta) }} />
             </div>
-            <button type="button" className="flex items-center gap-2 bg-slate-800 px-4 py-2 rounded-lg text-sm text-slate-300" onClick={() => copyToClipboard(result.cta, 'cta')}>{copyStates.cta ? 'Copied!' : <><Copy size={16} /> Copy</>}</button>
+            <button type="button" className="flex items-center gap-2 bg-slate-800 px-4 py-2 rounded-lg text-sm text-slate-300" onClick={(e) => { e.preventDefault(); copyToClipboard(result.cta, 'cta'); }}>{copyStates.cta ? 'Copied!' : <><Copy size={16} /> Copy</>}</button>
         </div>
 
         <div className="bg-amber-500/5 p-6 rounded-xl border border-amber-500/20">
@@ -100,8 +100,8 @@ export default function App() {
         </div>
 
         <div className="flex gap-4">
-          <button type="button" className="flex items-center gap-2 bg-slate-800 px-6 py-3 rounded-lg" onClick={handleCopyAll}>{copyStates.all ? 'Copied!' : <><Copy size={18} /> Copy All</>}</button>
-          <button className="flex items-center gap-2 bg-lime-400 text-slate-950 px-6 py-3 rounded-lg" onClick={handleSubmit}><RefreshCw size={18} /> Regenerate</button>
+          <button type="button" className="flex items-center gap-2 bg-slate-800 px-6 py-3 rounded-lg" onClick={(e) => { e.preventDefault(); handleCopyAll(); }}>{copyStates.all ? 'Copied!' : <><Copy size={18} /> Copy All</>}</button>
+          <button className="flex items-center gap-2 bg-lime-400 text-slate-950 px-6 py-3 rounded-lg" onClick={(e) => { e.preventDefault(); handleSubmit(e); }}><RefreshCw size={18} /> Regenerate</button>
         </div>
 
         <button
@@ -247,7 +247,6 @@ export default function App() {
             defaultValue={body}
             className={`w-full p-4 bg-slate-950 border border-slate-700 rounded-lg focus:ring-2 focus:ring-lime-500 outline-none transition h-64 text-slate-200 leading-relaxed ${isEditing ? 'block' : 'hidden'}`}
             onBlur={toggleEdit}
-            autoFocus
           />
           <div 
             className={`text-slate-200 leading-relaxed whitespace-pre-line p-4 bg-slate-800 rounded-lg border border-slate-700 cursor-pointer hover:border-lime-500 transition ${isEditing ? 'hidden' : 'block'}`} 
