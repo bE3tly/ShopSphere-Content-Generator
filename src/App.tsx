@@ -24,6 +24,7 @@ export default function App() {
   const [factInput, setFactInput] = useState('');
   const [result, setResult] = useState<any>(null);
   const [editableBody, setEditableBody] = useState('');
+  const [scrollTrigger, setScrollTrigger] = useState(0); // Distinct state for scrolling
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copyStates, setCopyStates] = useState<{ cta: boolean; all: boolean }>({ cta: false, all: false });
@@ -37,12 +38,12 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    if (result && resultsRef.current) {
+    if (scrollTrigger > 0 && resultsRef.current) {
       setTimeout(() => {
         resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }, 200);
     }
-  }, [result]);
+  }, [scrollTrigger]);
 
   const dismissTooltip = () => {
     setShowTooltip(false);
@@ -118,6 +119,7 @@ export default function App() {
 
       setResult(data);
       setEditableBody(data.body);
+      setScrollTrigger(prev => prev + 1); // Trigger scroll
     } catch (err: any) {
       clearTimeout(timeoutId);
       if (err.name === 'AbortError') {
