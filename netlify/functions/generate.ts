@@ -16,11 +16,11 @@ export const handler = async (event: any) => {
 
 STRICT RULES:
 1. FACT LOCK: Only use facts explicitly provided. Never invent specifications, statistics, prices, or claims not given. If an expected detail is missing, use a placeholder like [ADD PRICE] instead of guessing.
-2. CONFIDENCE FLAGGING: Wrap ALL sentences that contain:
-   - Specific numbers, statistics, prices, or dates
-   - Any comparative or superlative claim (e.g., "best", "most", "#1", "fastest", "guaranteed", "unmatched")
-   - Any product benefit, quality, or performance claim (e.g., "long-lasting", "sophisticated", "durable", "easy to use")
-   in [VERIFY: sentence text] tags. Flagging is better than missing a claim; when in doubt, wrap it.
+2. CONFIDENCE FLAGGING: Wrap ONLY sentences containing:
+   - A specific number, statistic, price, or date
+   - A clear comparative or superlative claim ("best," "#1," "guaranteed," "unmatched")
+   - A specific factual claim about product performance, safety, or duration (e.g. "lasts 12 hours," "waterproof," "certified")
+Do NOT flag general marketing tone, casual phrasing, or vague enthusiasm ("ready to roll," "in style," "your new favorite"). Flagging should be selective; aim for 0-2 flagged sentences per generation.
 3. Flagged content always requires human confirmation before publishing.
 
 WORD COUNT CONSTRAINTS:

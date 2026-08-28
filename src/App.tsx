@@ -137,8 +137,8 @@ export default function App() {
     return parts.map((part, i) => {
       if (i % 2 === 1) {
         return (
-          <span key={i} className="bg-amber-900/40 text-amber-100 px-1 rounded border-b-2 border-amber-500">
-            <AlertTriangle size={14} className="inline mr-1 text-amber-500" />
+          <span key={i} className="bg-amber-200/50 text-amber-950 px-1 rounded border-b-2 border-amber-400">
+            <AlertTriangle size={14} className="inline mr-1 text-amber-600" />
             {part}
           </span>
         );
@@ -219,7 +219,7 @@ export default function App() {
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mt-12 space-y-8">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {result.headlines.map((h: string, i: number) => (
-                  <div key={i} className="p-4 bg-slate-800 border border-slate-700 rounded-xl cursor-pointer hover:border-lime-500 transition">{h}</div>
+                  <div key={i} className="p-4 bg-slate-800 border border-slate-700 rounded-xl cursor-pointer hover:border-lime-500 transition">{RenderBody(h)}</div>
                 ))}
               </div>
               
@@ -237,17 +237,17 @@ export default function App() {
               <div className="bg-slate-900 p-6 rounded-xl border border-slate-800 flex justify-between items-center">
                   <div>
                     <label className="text-xs text-slate-500 uppercase tracking-widest font-bold">Suggested CTA</label>
-                    <p className="text-lg font-medium">{result.cta}</p>
+                    <div className="text-lg font-medium">{RenderBody(result.cta)}</div>
                   </div>
                   <button className="flex items-center gap-2 bg-slate-800 px-4 py-2 rounded-lg text-sm text-slate-300" onClick={() => copyToClipboard(result.cta, 'cta')}>{copyStates.cta ? 'Copied!' : <><Copy size={16} /> Copy</>}</button>
               </div>
 
-              <div className="bg-slate-950 p-6 rounded-xl border border-slate-800">
-                <h3 className="text-amber-200 font-bold mb-4 flex items-center gap-2"><AlertTriangle size={20} /> Double-check these before posting</h3>
+              <div className="bg-amber-500/5 p-6 rounded-xl border border-amber-500/20">
+                <h3 className="text-amber-300 font-bold mb-4 flex items-center gap-2"><AlertTriangle size={20} className="text-amber-400" /> Double-check these before posting</h3>
                 {result.verification_flags.length > 0 ? (
                   <ul className="space-y-2">
                     {result.verification_flags.map((flag: string, i: number) => (
-                      <li key={i} className="text-amber-100 text-sm bg-amber-900/20 p-3 rounded-lg border border-amber-900/50">"{flag}"</li>
+                      <li key={i} className="text-amber-100 text-sm bg-amber-500/10 p-3 rounded-lg border border-amber-500/20">"{flag}"</li>
                     ))}
                   </ul>
                 ) : (
