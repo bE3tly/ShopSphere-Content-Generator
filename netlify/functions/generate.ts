@@ -68,6 +68,20 @@ No markdown fences, no preamble, no text outside the JSON object.`;
     const content = data.choices[0].message.content.replace(/```json\n?|\n?```/g, '');
     const parsedContent = JSON.parse(content);
     
+    // Forced flagging for the demo
+    const forceFlag = (text: string) => {
+      if (text.includes("[VERIFY:")) return text;
+      const markers = [/\$\d+/, /\d+\s?(g|kg|lbs|oz|ml|l|w)\b/i, /\b(best|#1|guaranteed)\b/i];
+      if (markers.some(m => m.test(text))) {
+        return `[VERIFY: ${text}]`;
+      }
+      return text;
+    };
+
+    parsedContent.body = forceFlag(parsedContent.body);
+    parsedContent.cta = forceFlag(parsedContent.cta);
+    parsedContent.headlines = parsedContent.headlines.map(forceFlag);
+
     console.log("Generation successful, returning response");
     return {
       statusCode: 200,
